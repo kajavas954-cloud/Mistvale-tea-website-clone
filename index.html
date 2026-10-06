@@ -405,11 +405,13 @@
       right: -100%;
       width: 100%;
       max-width: 400px;
-      height: 100vh;
+      height: 100%;
+      height: 100dvh;
       background-color: var(--cream);
       box-shadow: -8px 0 24px rgba(0,0,0,0.1);
       z-index: 60;
       padding: 24px;
+      padding-bottom: max(24px, env(safe-area-inset-bottom)); /* For iPhone bottom bar */
       display: flex;
       flex-direction: column;
       transition: right 0.3s ease-in-out;
@@ -737,6 +739,18 @@
   <input type="hidden" name="items">
   <input type="hidden" name="coupon">
 </form>
+
+<!-- Success Overlay -->
+<div id="order-success-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(31,61,43,0.8); z-index:9999; justify-content:center; align-items:center; opacity:0; transition: opacity 0.3s ease;">
+  <div id="order-success-modal" style="background:var(--cream); padding:40px; border-radius:16px; text-align:center; max-width:90%; width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s ease;">
+    <div style="background:var(--leaf); color:var(--cream); width:80px; height:80px; border-radius:50%; display:flex; justify-content:center; align-items:center; margin:0 auto 24px;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h2 style="margin-bottom:16px; color:var(--tea-green);">Order Placed!</h2>
+    <p style="margin-bottom:32px; color:var(--ink);">Your items have been successfully placed. Thank you for shopping with Mistvale.</p>
+    <button class="btn-primary" style="width:100%;" onclick="closeSuccessOverlay()">Continue Shopping</button>
+  </div>
+</div>
 
 <script>
 // product data - comes from backend, DO NOT CHANGE ids, names or prices
@@ -1107,15 +1121,34 @@ function checkout() {
     alert("Cart is empty");
     return;
   }
-  var form = document.getElementById('checkout-form');
-  var itemsInput = form.querySelector('input[name="items"]');
-  var couponInput = form.querySelector('input[name="coupon"]');
   
-  var submitItems = cart.map(function(c){ return {id: parseInt(c.id), qty: parseInt(c.qty)}; });
-  itemsInput.value = JSON.stringify(submitItems);
-  couponInput.value = appliedCoupon || '';
+  cart = [];
+  saveCart();
+  updateCount();
+  renderCart();
+  closeCart();
   
-  form.submit();
+  var overlay = document.getElementById('order-success-overlay');
+  var modal = document.getElementById('order-success-modal');
+  overlay.style.display = 'flex';
+  
+  // Trigger reflow for transition
+  void overlay.offsetWidth;
+  
+  overlay.style.opacity = '1';
+  modal.style.transform = 'translateY(0)';
+}
+
+function closeSuccessOverlay() {
+  var overlay = document.getElementById('order-success-overlay');
+  var modal = document.getElementById('order-success-modal');
+  
+  overlay.style.opacity = '0';
+  modal.style.transform = 'translateY(20px)';
+  
+  setTimeout(function() {
+    overlay.style.display = 'none';
+  }, 300);
 }
 
 function countdown() {
